@@ -31,6 +31,21 @@ class WaMe {
     return success;
   }
 
+  /// Checks whether any whatsapp is installed in device or not
+  /// from the following options [Package.whatsapp] [Package.businessWhatsapp],
+  /// [Package.gbWhatsapp], [Package.fmWhatsapp], [Package.yoWhatsapp]
+  /// return package if installed otherwise null.
+  static Future<Package?> isAnyInstalled() async {
+    for (final Package p in Package.values) {
+      final bool? success = await _channel
+          .invokeMethod('isInstalled', {'package': p.packageName});
+      if (success ?? false) {
+        return p;
+      }
+    }
+    return null;
+  }
+
   /// Shares a message or/and link url with whatsapp.
   /// - Text: Is the [text] of the message.
   /// - LinkUrl: Is the [linkUrl] to include with the message.

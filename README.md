@@ -1,4 +1,4 @@
-# Whatsapp Share Plugin
+# WaMe Plugin
 
 This is a fork of the https://pub.dev/packages/whatsapp_share2 package. I would love for it to work
 with other WhatsApp apps apart from the official ones e.g. WhatsAp GB (though we cannot exhaust all
