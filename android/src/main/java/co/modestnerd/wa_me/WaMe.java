@@ -187,6 +187,9 @@ public class WaMe implements FlutterPlugin, MethodCallHandler {
         try {
             context.startActivity(intent);
             result.success(true);
+        } catch (ActivityNotFoundException ex) {
+            Log.e("", "WaMe: No app available to handle the 'send' action");
+            result.error("WaMe: No app available to handle the 'send' action", null, null);
         } catch (Exception ex) {
             Log.e("", "WaMe: Error sharing file");
             result.error("WaMe: Error sharing file", null, null);
