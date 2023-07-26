@@ -1,10 +1,10 @@
 # Whatsapp Share Plugin
 
-A Flutter plugin for IOS and Android providing a simple way to share a message, link or local files to specific WhatsApp contact.
+This is a fork of the https://pub.dev/packages/whatsapp_share2 package. I would love to work with
+other WhatsApp apps apart from the official ones.
 
 ## Features:
 
-* null safe
 * Share messages or link urls to specific contact.
 * Share local files to specific contact.
 
