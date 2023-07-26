@@ -169,14 +169,20 @@ public class WaMe implements FlutterPlugin, MethodCallHandler {
         }
 
         Intent intent = new Intent();
+        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         intent.setAction(Intent.ACTION_SEND_MULTIPLE);
         intent.setType("*/*");
         intent.setPackage(packageName);
-        intent.putExtra("jid", phone + "@s.whatsapp.net");
+        intent.putExtra("jid",phone + "@s.whatsapp.net");
         intent.putExtra(Intent.EXTRA_SUBJECT, title);
         intent.putExtra(Intent.EXTRA_TEXT, text);
-        intent.putParcelableArrayListExtra(Intent.EXTRA_STREAM, files);
+        intent.putExtra(Intent.EXTRA_STREAM, files);
         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+
+        //Intent chooserIntent = Intent.createChooser(intent, chooserTitle);
+        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
         try {
             context.startActivity(intent);
