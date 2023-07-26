@@ -11,7 +11,8 @@ enum Package {
   businessWhatsapp('com.whatsapp.w4b'),
   gbWhatsapp('com.gbwhatsapp'),
   fmWhatsapp('com.fmwhatsapp'),
-  yoWhatsapp('com.yowhatsapp');
+  yoWhatsapp('com.yowhatsapp'),
+  yoWhatsapp2('com.yowhats.sofitab');
 
   const Package(this.packageName);
   final String packageName;

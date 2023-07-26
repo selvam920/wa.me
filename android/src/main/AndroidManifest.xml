@@ -1,1 +1,3 @@
-<manifest package="co.modestnerd.wa_me"></manifest>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="co.modestnerd.wa_me">
+    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
+</manifest>

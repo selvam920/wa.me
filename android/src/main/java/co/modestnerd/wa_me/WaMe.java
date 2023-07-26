@@ -18,6 +18,7 @@ import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
+import android.content.ActivityNotFoundException;
 
 public class WaMe implements FlutterPlugin, MethodCallHandler {
     private Context context;
@@ -112,17 +113,26 @@ public class WaMe implements FlutterPlugin, MethodCallHandler {
         String extraText = TextUtils.join("\n\n", extraTextList);
 
         Intent intent = new Intent();
+        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         intent.setAction(Intent.ACTION_SEND);
         intent.setType("text/plain");
         intent.setPackage(packageName);
-        intent.putExtra("jid", phone + "@s.whatsapp.net");
+        intent.putExtra("jid",phone + "@s.whatsapp.net");
         intent.putExtra(Intent.EXTRA_SUBJECT, title);
         intent.putExtra(Intent.EXTRA_TEXT, extraText);
+
+        //Intent chooserIntent = Intent.createChooser(intent, chooserTitle);
+        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
         try {
             context.startActivity(intent);
             result.success(true);
-        } catch (Exception ex) {
+        } catch (ActivityNotFoundException ex) {
+            Log.e("", "WaMe: No app available to handle the 'send' action");
+            result.error("WaMe: No app available to handle the 'send' action", null, null);
+        }  catch (Exception ex) {
             Log.e("", "WaMe: Error sharing message");
             result.error("WaMe: Error sharing message", null, null);
         }
