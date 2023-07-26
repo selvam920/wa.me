@@ -13,8 +13,8 @@ import 'package:flutter/services.dart';
 
 import 'models/package.dart';
 
-class WhatsappShare {
-  static const MethodChannel _channel = MethodChannel('whatsapp_share');
+class WaMe {
+  static const MethodChannel _channel = MethodChannel('wa_me');
 
   /// Checks whether whatsapp is installed in device or not
   ///

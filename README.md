@@ -1,26 +1,31 @@
 # Whatsapp Share Plugin
 
-This is a fork of the https://pub.dev/packages/whatsapp_share2 package. I would love to work with
-other WhatsApp apps apart from the official ones.
+This is a fork of the https://pub.dev/packages/whatsapp_share2 package. I would love for it to work
+with other WhatsApp apps apart from the official ones e.g. WhatsAp GB (though we cannot exhaust all
+of them 🤣).
+
+This has not been tested on iOS.
 
 ## Features:
 
-* Share messages or link urls to specific contact.
-* Share local files to specific contact.
-
+- Share messages or link urls to specific contact.
+- Share local files to specific contact.
 
 ## Installation
 
 First, add this to your package's pubspec.yaml file:
+
 ```
 dependencies:
-  whatsapp_share2: ^2.0.0
+  wa_me: latest_version
 ```
 
 Now in your Dart code, you can use:
+
 ```
-import 'package:whatsapp_share2/whatsapp_share2.dart';
+import 'package:wa_me/wa_me.dart';
 ```
+
 ## Installation (Platform Specific)
 
 ### iOS
@@ -56,6 +61,7 @@ Add to `AndroidManifest.xml`:
 </provider>
 </application>
 ```
+
 Obs: You can change the android:name if you have an extension of file provider.
 
 Add `res/xml/provider_paths.xml`:
@@ -69,7 +75,7 @@ Add `res/xml/provider_paths.xml`:
 
 If you want to learn more about file provider you can access:
 
-  - https://developer.android.com/reference/android/support/v4/content/FileProvider
+- https://developer.android.com/reference/android/support/v4/content/FileProvider
 
 ## How to use?
 
@@ -79,23 +85,23 @@ Here is an snippets app displaying the two whatsapp share methods .
 
 ```Dart
  Future<void> isInstalled() async {
-    final val = await WhatsappShare.isInstalled(
-      package: Package.businessWhatsapp
+    final val = await WaMe.isInstalled(
+      package: Package.gbWhatsapp
     );
-    print('Whatsapp Business is installed: $val');
+    print('Whatsapp GB is installed: $val');
   }
 ```
-<small>If whatsapp is not installed, please do not call ```WhatsappShare.share()``` and ```WhatsappShare.shareFile()```
-</small>
 
+<small>If whatsapp is not installed, please do not call `WaMe.share()` and `WaMe.shareFile()`
+</small>
 
 ### Share text, links
 
 ```Dart
 
  Future<void> share() async {
-    await WhatsappShare.share(
-      text: 'Whatsapp share text',
+    await WaMe.share(
+      text: 'WaMe share text',
       linkUrl: 'https://flutter.dev/',
       phone: '91xxxxxxxxxx',
     );
@@ -105,20 +111,15 @@ Here is an snippets app displaying the two whatsapp share methods .
 
 ### Share images, files
 
-```_image1.path``` contains path of the file which is shared to the whatsapp.
+`_image1.path` contains path of the file which is shared to the whatsapp.
 
 ```Dart
 
  Future<void> shareFile() async {
-    await WhatsappShare.shareFile(
-      text: 'Whatsapp share text',
+    await WaMe.shareFile(
+      text: 'WaMe share text',
       phone: '91xxxxxxxxxx',
       filePath: [_image1.path, _image2.path],
     );
   }
-
-```"# whatsapp_share" 
-"# whatsapp_share" 
-"# whatsapp_share" 
-"# whatsapp_share2" 
-"# whatsapp_share null safe" 
+```
