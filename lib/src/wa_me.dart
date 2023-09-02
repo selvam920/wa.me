@@ -78,7 +78,7 @@ class WaMe {
   /// - FilePath: Is the List of paths which can be prefilled.
   /// - Phone: is the [phone] contact number to share with.
   static Future<bool?> shareFile({
-    required List<String> filePath,
+    required String filePath,
     required String phone,
     String? text,
     Package package = Package.whatsapp,

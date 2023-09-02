@@ -99,6 +99,10 @@ public class WaMe implements FlutterPlugin, MethodCallHandler {
             Log.e("", "WaMe: Package name is null or empty");
             result.error("WaMe: Package name cannot be null or empty", null, null);
             return;
+        } else if (TextUtils.isEmpty(text) && TextUtils.isEmpty(linkUrl)) {
+            Log.e("", "WaMe: Text and linkUrl are null or empty");
+            result.error("WaMe: Text and linkUrl cannot be null or empty", null, null);
+            return;
         }
 
         ArrayList<String> extraTextList = new ArrayList<>();
@@ -139,14 +143,18 @@ public class WaMe implements FlutterPlugin, MethodCallHandler {
     }
 
     private void shareFile(MethodCall call, Result result) {
-        String title = call.argument("title");
         String text = call.argument("text");
-        ArrayList<String> filePaths = call.argument("filePath");
-        String chooserTitle = call.argument("chooserTitle");
+        String filePath = call.argument("filePath");
         String phone = call.argument("phone");
         String packageName = call.argument("package");
 
-        if (filePaths == null || filePaths.isEmpty()) {
+        // log all the arguments
+        Log.i("text", text);
+        Log.i("phone", phone);
+        Log.i("packageName", packageName);
+
+
+        if (TextUtils.isEmpty(filePath)) {
             Log.e("", "WaMe: ShareLocalFile Error: filePath is null or empty");
             result.error("WaMe: FilePath cannot be null or empty", null, null);
             return;
@@ -158,26 +166,25 @@ public class WaMe implements FlutterPlugin, MethodCallHandler {
             Log.e("", "WaMe: Package name is null or empty");
             result.error("WaMe: Package name cannot be null or empty", null, null);
             return;
+        } else if (TextUtils.isEmpty(text)) {
+            Log.e("", "WaMe: Text is null or empty");
+            result.error("WaMe: Text cannot be null or empty", null, null);
+            return;
         }
 
-        ArrayList<Uri> files = new ArrayList<>();
-
-        for (String filePath : filePaths) {
-            File file = new File(filePath);
-            Uri fileUri = FileProvider.getUriForFile(context, context.getApplicationContext().getPackageName() + ".provider", file);
-            files.add(fileUri);
-        }
+        Uri uri = FileProvider.getUriForFile(context, context.getApplicationContext().getPackageName() + ".provider", new File(filePath));
 
         Intent intent = new Intent();
         intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        intent.setAction(Intent.ACTION_SEND_MULTIPLE);
-        intent.setType("*/*");
+        intent.setAction(Intent.ACTION_SEND);
         intent.setPackage(packageName);
         intent.putExtra("jid",phone + "@s.whatsapp.net");
-        intent.putExtra(Intent.EXTRA_SUBJECT, title);
+        intent.putExtra(Intent.EXTRA_SUBJECT, text);
         intent.putExtra(Intent.EXTRA_TEXT, text);
-        intent.putExtra(Intent.EXTRA_STREAM, files);
+        intent.setType("text/plain");
+        intent.putExtra(Intent.EXTRA_STREAM, uri);
+        intent.setType("image/png");
         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
 
         //Intent chooserIntent = Intent.createChooser(intent, chooserTitle);
