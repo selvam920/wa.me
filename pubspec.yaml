@@ -1,6 +1,6 @@
 name: wa_me
 description: Simple way to share message, links or files from your flutter app to specific contact in whatsapp
-version: 0.0.5+2
+version: 0.0.6
 homepage: https://github.com/iamngoni/wa.me
 issue_tracker: https://github.com/iamngoni/wa.me
 
