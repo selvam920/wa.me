@@ -2,9 +2,7 @@
 
 This is a fork of the https://pub.dev/packages/whatsapp_share2 package. I would love for it to work
 with other WhatsApp apps apart from the official ones e.g. WhatsAp GB (though we cannot exhaust all
-of them 🤣).
-
-This has not been tested on iOS.
+of them 🤣). I will be adding more features to it as time goes by.
 
 ## Features:
 
