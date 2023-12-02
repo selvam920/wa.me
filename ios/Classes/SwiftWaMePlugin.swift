@@ -1,13 +1,12 @@
 import Flutter
 import UIKit
 
-public class SwiftWhatsappShare: NSObject, FlutterPlugin {
-
+public class SwiftWaMe: NSObject, FlutterPlugin {
   private var result: FlutterResult?
 
   public static func register(with registrar: FlutterPluginRegistrar) {
     let channel = FlutterMethodChannel(name: "wa_me", binaryMessenger: registrar.messenger())
-    registrar.addMethodCallDelegate(SwiftWhatsappShare(), channel: channel)
+    registrar.addMethodCallDelegate(SwiftWaMe(), channel: channel)
   }
 
   public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {

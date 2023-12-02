@@ -4,7 +4,7 @@
 Pod::Spec.new do |s|
   s.name             = 'wa_me'
   s.version          = '0.0.1'
-  s.swift_version    = '4.1'
+  s.swift_version    = '5'
   s.summary          = 'Simple way to share a message, link or files from your flutter app'
   s.description      = <<-DESC
 Simple way to share a message, link or files from your flutter app
@@ -16,7 +16,6 @@ Simple way to share a message, link or files from your flutter app
   s.source_files = 'Classes/**/*'
   s.public_header_files = 'Classes/**/*.h'
   s.dependency 'Flutter'
-
-  s.ios.deployment_target = '8.0'
+  s.ios.deployment_target = '12.0'
 end
 
