@@ -50,9 +50,11 @@ class WaMe {
   /// - Text: Is the [text] of the message.
   /// - LinkUrl: Is the [linkUrl] to include with the message.
   /// - Phone: is the [phone] contact number to share with.
+  /// - CountryCode: is the [countryCode] of the phone number.
 
   static Future<bool?> share({
     required String phone,
+    String? countryCode,
     String? text,
     String? linkUrl,
     Package package = Package.whatsapp,
@@ -61,12 +63,20 @@ class WaMe {
       throw FlutterError('Phone cannot be null and with country code');
     }
 
+    var sanitizedPhone = phone.replaceAll(' ', '').replaceAll('+', '');
+    if (countryCode != null) {
+      var sanitizedCode = countryCode.replaceAll(' ', '').replaceAll('+', '');
+      if (!sanitizedPhone.startsWith(sanitizedCode)) {
+        sanitizedPhone = '$sanitizedCode$sanitizedPhone';
+      }
+    }
+
     final bool? success = await _channel.invokeMethod('share', {
       'title': ' ',
       'text': text,
       'linkUrl': linkUrl,
       'chooserTitle': ' ',
-      'phone': phone,
+      'phone': sanitizedPhone,
       'package': package.packageName,
     });
 
@@ -77,9 +87,11 @@ class WaMe {
   /// - Text: Is the [text] of the message.
   /// - FilePath: Is the List of paths which can be prefilled.
   /// - Phone: is the [phone] contact number to share with.
+  /// - CountryCode: is the [countryCode] of the phone number.
   static Future<bool?> shareFile({
     required String filePath,
     required String phone,
+    String? countryCode,
     String? text,
     Package package = Package.whatsapp,
   }) async {
@@ -91,13 +103,21 @@ class WaMe {
       throw FlutterError('Phone cannot be null and with country code');
     }
 
+    var sanitizedPhone = phone.replaceAll(' ', '').replaceAll('+', '');
+    if (countryCode != null) {
+      var sanitizedCode = countryCode.replaceAll(' ', '').replaceAll('+', '');
+      if (!sanitizedPhone.startsWith(sanitizedCode)) {
+        sanitizedPhone = '$sanitizedCode$sanitizedPhone';
+      }
+    }
+
     final bool? success =
         await _channel.invokeMethod('shareFile', <String, dynamic>{
       'title': ' ',
       'text': text,
       'filePath': filePath,
       'chooserTitle': ' ',
-      'phone': phone,
+      'phone': sanitizedPhone,
       'package': package.packageName,
     });
 
