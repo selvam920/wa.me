@@ -8,6 +8,7 @@ dependencies:
   flutter:
     sdk: flutter
 
+  material_ui: any
 flutter:
   plugin:
     platforms:
