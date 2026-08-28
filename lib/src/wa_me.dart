@@ -8,13 +8,63 @@
 
 import 'dart:async';
 
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
+import 'package:material_ui/material_ui.dart';
 
 import 'models/package.dart';
 
 class WaMe {
   static const MethodChannel _channel = MethodChannel('wa_me');
+
+  /// Formats and sanitizes a phone number for WhatsApp deep-linking.
+  /// Removes all non-numeric characters and handles country code formatting
+  /// including stripping leading zeros from local numbers.
+  static String formatPhone({
+    required String phone,
+    String? countryCode,
+  }) {
+    final rawPhone = phone.trim();
+    final startsWithPlus = rawPhone.startsWith('+');
+    final startsWithDoubleZero = rawPhone.startsWith('00');
+
+    var cleanedPhone = rawPhone.replaceAll(RegExp('[^0-9]'), '');
+    if (cleanedPhone.isEmpty) {
+      return '';
+    }
+
+    if (countryCode != null && countryCode.trim().isNotEmpty) {
+      final cleanedCode = countryCode.replaceAll(RegExp('[^0-9]'), '');
+      if (cleanedCode.isNotEmpty) {
+        if (startsWithPlus || startsWithDoubleZero) {
+          // If the user explicitly provided international prefix '+' or '00',
+          // strip any leading '00' but trust the user's country code.
+          if (cleanedPhone.startsWith('00')) {
+            cleanedPhone = cleanedPhone.substring(2);
+          }
+          return cleanedPhone;
+        }
+
+        // Strip leading zeros from the local phone number.
+        final phoneWithoutLeadingZeros =
+            cleanedPhone.replaceFirst(RegExp('^0+'), '');
+
+        // If the number already starts with country code and has full length
+        if (phoneWithoutLeadingZeros.startsWith(cleanedCode) &&
+            phoneWithoutLeadingZeros.length > cleanedCode.length + 7) {
+          return phoneWithoutLeadingZeros;
+        }
+
+        return '$cleanedCode$phoneWithoutLeadingZeros';
+      }
+    }
+
+    // If no country code is provided, strip international '00' prefix
+    if (cleanedPhone.startsWith('00')) {
+      cleanedPhone = cleanedPhone.substring(2);
+    }
+
+    return cleanedPhone;
+  }
 
   /// Checks whether whatsapp is installed in device or not
   ///
@@ -59,16 +109,9 @@ class WaMe {
     String? linkUrl,
     Package package = Package.whatsapp,
   }) async {
-    if (phone.isEmpty) {
-      throw FlutterError('Phone cannot be null and with country code');
-    }
-
-    var sanitizedPhone = phone.replaceAll(' ', '').replaceAll('+', '');
-    if (countryCode != null) {
-      var sanitizedCode = countryCode.replaceAll(' ', '').replaceAll('+', '');
-      if (!sanitizedPhone.startsWith(sanitizedCode)) {
-        sanitizedPhone = '$sanitizedCode$sanitizedPhone';
-      }
+    final sanitizedPhone = formatPhone(phone: phone, countryCode: countryCode);
+    if (sanitizedPhone.isEmpty) {
+      throw FlutterError('Phone cannot be null or empty');
     }
 
     final bool? success = await _channel.invokeMethod('share', {
@@ -99,16 +142,9 @@ class WaMe {
       throw FlutterError('FilePath cannot be null');
     }
 
-    if (phone.isEmpty) {
-      throw FlutterError('Phone cannot be null and with country code');
-    }
-
-    var sanitizedPhone = phone.replaceAll(' ', '').replaceAll('+', '');
-    if (countryCode != null) {
-      var sanitizedCode = countryCode.replaceAll(' ', '').replaceAll('+', '');
-      if (!sanitizedPhone.startsWith(sanitizedCode)) {
-        sanitizedPhone = '$sanitizedCode$sanitizedPhone';
-      }
+    final sanitizedPhone = formatPhone(phone: phone, countryCode: countryCode);
+    if (sanitizedPhone.isEmpty) {
+      throw FlutterError('Phone cannot be null or empty');
     }
 
     final bool? success =

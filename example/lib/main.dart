@@ -72,10 +72,10 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _pickFile() async {
-    final result = await FilePicker.platform.pickFiles();
+    final result = await FilePicker.pickFile();
     if (result != null) {
       setState(() {
-        _filePath = result.files.single.path;
+        _filePath = result.path;
       });
     }
   }

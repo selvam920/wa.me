@@ -5,6 +5,23 @@
         <package android:name="com.gbwhatsapp" />
         <package android:name="com.fmwhatsapp" />
         <package android:name="com.yowhatsapp" />
+        <package android:name="com.yowhats.sofitab" />
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="whatsapp" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="https" android:host="api.whatsapp.com" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="https" android:host="wa.me" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.SEND" />
+            <data android:mimeType="*/*" />
+        </intent>
     </queries>
 
     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />

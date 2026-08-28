@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import android.util.Log
 import android.webkit.MimeTypeMap
 import androidx.core.content.FileProvider
@@ -44,7 +45,11 @@ class WaMe : FlutterPlugin, MethodCallHandler {
 
     private fun sanitizePhone(phone: String?): String {
         if (phone == null) return ""
-        return phone.replace("[^0-9]".toRegex(), "")
+        var cleaned = phone.replace("[^0-9]".toRegex(), "")
+        while (cleaned.startsWith("00")) {
+            cleaned = cleaned.substring(2)
+        }
+        return cleaned
     }
 
     private fun getMimeType(filePath: String): String {
@@ -55,10 +60,19 @@ class WaMe : FlutterPlugin, MethodCallHandler {
 
     private fun isPackageInstalled(packageName: String): Boolean {
         return try {
-            context?.packageManager?.getPackageInfo(packageName, 0)
+            val pm = context?.packageManager
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                pm?.getPackageInfo(packageName, PackageManager.PackageInfoFlags.of(0))
+            } else {
+                @Suppress("DEPRECATION")
+                pm?.getPackageInfo(packageName, 0)
+            }
             true
         } catch (e: PackageManager.NameNotFoundException) {
-            Log.e("", "Package not found: ${e.message}")
+            Log.d("WaMe", "Package not found: ${e.message}")
+            false
+        } catch (e: Exception) {
+            Log.d("WaMe", "Error checking package: ${e.message}")
             false
         }
     }
@@ -66,7 +80,7 @@ class WaMe : FlutterPlugin, MethodCallHandler {
     private fun isInstalled(call: MethodCall, result: Result) {
         val packageName = call.argument<String>("package")
         if (packageName.isNullOrEmpty()) {
-            Log.e("", "WaMe: Package name is null or empty")
+            Log.e("WaMe", "WaMe: Package name is null or empty")
             result.error("WaMe: Package name cannot be null or empty", null, null)
             return
         }
@@ -82,11 +96,11 @@ class WaMe : FlutterPlugin, MethodCallHandler {
         val packageName = call.argument<String>("package")
 
         if (phone.isNullOrEmpty()) {
-            Log.e("", "WaMe: Phone is null or empty")
+            Log.e("WaMe", "WaMe: Phone is null or empty")
             result.error("WaMe: Phone cannot be null or empty", null, null)
             return
         } else if (packageName.isNullOrEmpty()) {
-            Log.e("", "WaMe: Package name is null or empty")
+            Log.e("WaMe", "WaMe: Package name is null or empty")
             result.error("WaMe: Package name cannot be null or empty", null, null)
             return
         }
@@ -97,29 +111,70 @@ class WaMe : FlutterPlugin, MethodCallHandler {
         val extraText = extraTextList.joinToString("\n\n")
 
         val sanitizedPhone = sanitizePhone(phone)
-        
-        // Use ACTION_VIEW with wa.me for better reliability with unsaved contacts
-        val url = if (extraText.isNotEmpty()) {
-            "https://wa.me/$sanitizedPhone?text=${Uri.encode(extraText)}"
+        val encodedText = if (extraText.isNotEmpty()) Uri.encode(extraText) else ""
+
+        // Multi-tier URI strategy:
+        // 1. whatsapp://send - native deep link, works reliably with unsaved numbers across all WhatsApp variants
+        // 2. https://api.whatsapp.com/send - universal endpoint supported by all WhatsApp packages
+        // 3. https://wa.me - official web link supported by WhatsApp Messenger
+        val whatsappUri = if (encodedText.isNotEmpty()) {
+            Uri.parse("whatsapp://send?phone=$sanitizedPhone&text=$encodedText")
         } else {
-            "https://wa.me/$sanitizedPhone"
-        }
-        
-        val intent = Intent(Intent.ACTION_VIEW).apply {
-            data = Uri.parse(url)
-            setPackage(packageName)
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            Uri.parse("whatsapp://send?phone=$sanitizedPhone")
         }
 
-        try {
-            context?.startActivity(intent)
+        val apiUri = if (encodedText.isNotEmpty()) {
+            Uri.parse("https://api.whatsapp.com/send?phone=$sanitizedPhone&text=$encodedText")
+        } else {
+            Uri.parse("https://api.whatsapp.com/send?phone=$sanitizedPhone")
+        }
+
+        val waMeUri = if (encodedText.isNotEmpty()) {
+            Uri.parse("https://wa.me/$sanitizedPhone?text=$encodedText")
+        } else {
+            Uri.parse("https://wa.me/$sanitizedPhone")
+        }
+
+        val urisToTry = listOf(whatsappUri, apiUri, waMeUri)
+        var launched = false
+
+        for (uri in urisToTry) {
+            try {
+                val intent = Intent(Intent.ACTION_VIEW).apply {
+                    data = uri
+                    setPackage(packageName)
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+                context?.startActivity(intent)
+                launched = true
+                break
+            } catch (ex: Exception) {
+                Log.d("WaMe", "Attempt with $uri for package $packageName failed: ${ex.message}")
+            }
+        }
+
+        if (!launched) {
+            // Fallback without restricting package (opens system app chooser / default handler)
+            for (uri in listOf(apiUri, waMeUri)) {
+                try {
+                    val fallbackIntent = Intent(Intent.ACTION_VIEW).apply {
+                        data = uri
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    }
+                    context?.startActivity(fallbackIntent)
+                    launched = true
+                    break
+                } catch (ex: Exception) {
+                    Log.d("WaMe", "Unrestricted fallback with $uri failed: ${ex.message}")
+                }
+            }
+        }
+
+        if (launched) {
             result.success(true)
-        } catch (ex: ActivityNotFoundException) {
-            Log.e("", "WaMe: No app available to handle the 'send' action")
+        } else {
+            Log.e("WaMe", "WaMe: No app available to handle the 'send' action")
             result.error("WaMe: No app available to handle the 'send' action", null, null)
-        } catch (ex: Exception) {
-            Log.e("", "WaMe: Error sharing message: ${ex.message}")
-            result.error("WaMe: Error sharing message", null, null)
         }
     }
 
@@ -130,15 +185,15 @@ class WaMe : FlutterPlugin, MethodCallHandler {
         val packageName = call.argument<String>("package")
 
         if (filePath.isNullOrEmpty()) {
-            Log.e("", "WaMe: ShareLocalFile Error: filePath is null or empty")
+            Log.e("WaMe", "WaMe: ShareLocalFile Error: filePath is null or empty")
             result.error("WaMe: FilePath cannot be null or empty", null, null)
             return
         } else if (phone.isNullOrEmpty()) {
-            Log.e("", "WaMe: Phone is null or empty")
+            Log.e("WaMe", "WaMe: Phone is null or empty")
             result.error("WaMe: Phone cannot be null or empty", null, null)
             return
         } else if (packageName.isNullOrEmpty()) {
-            Log.e("", "WaMe: Package name is null or empty")
+            Log.e("WaMe", "WaMe: Package name is null or empty")
             result.error("WaMe: Package name cannot be null or empty", null, null)
             return
         }
@@ -157,12 +212,10 @@ class WaMe : FlutterPlugin, MethodCallHandler {
         // Grant URI read permission to WhatsApp explicitly
         ctx.grantUriPermission(packageName, uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
 
-        // Use ACTION_SEND with setDataAndType to combine the wa.me deep link
-        // (for phone number routing) with the MIME type (for file handling).
-        // This tells WhatsApp both WHO to send to and WHAT to send.
+        // Standard ACTION_SEND with jid
         val intent = Intent(Intent.ACTION_SEND).apply {
             setPackage(packageName)
-            setDataAndType(Uri.parse("https://api.whatsapp.com/send?phone=$sanitizedPhone"), mimeType)
+            type = mimeType
             putExtra("jid", "$sanitizedPhone@s.whatsapp.net")
             putExtra(Intent.EXTRA_TEXT, text ?: "")
             putExtra(Intent.EXTRA_STREAM, uri)
@@ -175,11 +228,9 @@ class WaMe : FlutterPlugin, MethodCallHandler {
             ctx.startActivity(intent)
             result.success(true)
         } catch (ex: Exception) {
-            Log.d("WaMe", "Approach 1 failed: ${ex.message}, trying ACTION_SENDTO...")
+            Log.d("WaMe", "Primary shareFile failed: ${ex.message}, trying ACTION_SENDTO...")
 
             // Fallback: ACTION_SENDTO with smsto: URI
-            // WhatsApp registers as an SMS/MMS handler, and smsto: routes
-            // directly to a phone number without needing a saved contact.
             val sendToIntent = Intent(Intent.ACTION_SENDTO).apply {
                 data = Uri.parse("smsto:$sanitizedPhone")
                 setPackage(packageName)
@@ -196,15 +247,14 @@ class WaMe : FlutterPlugin, MethodCallHandler {
                 ctx.startActivity(sendToIntent)
                 result.success(true)
             } catch (ex2: Exception) {
-                Log.d("WaMe", "Approach 2 failed: ${ex2.message}, trying plain ACTION_SEND...")
+                Log.d("WaMe", "Fallback 1 failed: ${ex2.message}, trying plain ACTION_SEND...")
 
-                // Final fallback: plain ACTION_SEND (will show contact picker)
+                // Final fallback: plain ACTION_SEND without jid restriction
                 val fallbackIntent = Intent(Intent.ACTION_SEND).apply {
                     setPackage(packageName)
-                    putExtra("jid", "$sanitizedPhone@s.whatsapp.net")
+                    type = mimeType
                     putExtra(Intent.EXTRA_TEXT, text ?: "")
                     putExtra(Intent.EXTRA_STREAM, uri)
-                    type = mimeType
                     clipData = ClipData.newRawUri("", uri)
                     addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
